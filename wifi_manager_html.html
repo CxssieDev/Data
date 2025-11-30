@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WiFi Network Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { margin: 0; padding: 0; }
+    </style>
+</head>
+<body class="bg-slate-900">
+    <div id="app" class="min-h-screen p-4 md:p-8">
+        <div class="max-w-7xl mx-auto">
+            <!-- Header -->
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <div class="flex items-center gap-3 mb-2">
+                        <svg class="text-blue-400" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
+                            <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
+                            <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+                            <line x1="12" y1="20" x2="12.01" y2="20"></line>
+                        </svg>
+                        <h1 class="text-3xl md:text-4xl font-bold text-white">WiFi Manager</h1>
+                    </div>
+                    <div class="flex items-center gap-4 text-sm">
+                        <span class="text-gray-400">ADMIN_00110011</span>
+                        <span class="text-gray-600">•</span>
+                        <span class="text-gray-400">Admin_Jaz</span>
+                    </div>
+                </div>
+                <button onclick="openAddModal()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 md:px-6 md:py-3 rounded-lg flex items-center gap-2 transition-all">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    <span class="hidden md:inline">Add</span>
+                </button>
+            </div>
+
+            <!-- Search -->
+            <div class="relative mb-6">
+                <svg class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+                <input type="text" id="searchInput" placeholder="Search devices..." class="w-full bg-slate-800 text-white pl-12 pr-4 py-3 rounded-lg border border-slate-700 focus:border-blue-500 focus:outline-none" oninput="filterDevices()">
+            </div>
+
+            <!-- Stats -->
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-slate-800 rounded-lg p-4 border border-slate-700">
+                    <div class="text-gray-400 text-sm mb-1">Total Devices</div>
+                    <div id="totalDevices" class="text-2xl font-bold text-white">9</div>
+                </div>
+                <div class="bg-slate-800 rounded-lg p-4 border border-slate-700">
+                    <div class="text-gray-400 text-sm mb-1">Online</div>
+                    <div id="onlineDevices" class="text-2xl font-bold text-green-400">9</div>
+                </div>
+            </div>
+
+            <!-- Device List -->
+            <div id="deviceList" class="space-y-3"></div>
+            
+            <!-- No Results -->
+            <div id="noResults" class="hidden bg-slate-800 rounded-lg p-12 text-center border border-slate-700">
+                <svg class="text-gray-600 mx-auto mb-4" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+                <p class="text-gray-400">No devices found</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Modal -->
+    <div id="addModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-800 rounded-lg max-w-md w-full p-6 border border-slate-700">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-white">Add Device</h2>
+                <button onclick="closeAddModal()" class="p-1 hover:bg-slate-700 rounded">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gray-400">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <input type="text" id="userName" placeholder="User Name" class="w-full bg-slate-900 text-white px-4 py-3 rounded-lg border border-slate-700 focus:border-blue-500 focus:outline-none">
+                <input type="text" id="deviceModel" placeholder="Device Model" class="w-full bg-slate-900 text-white px-4 py-3 rounded-lg border border-slate-700 focus:border-blue-500 focus:outline-none">
+                <input type="text" id="macAddress" placeholder="MAC Address" class="w-full bg-slate-900 text-white px-4 py-3 rounded-lg border border-slate-700 focus:border-blue-500 focus:outline-none font-mono">
+                <input type="text" id="ipAddress" placeholder="IP Address" class="w-full bg-slate-900 text-white px-4 py-3 rounded-lg border border-slate-700 focus:border-blue-500 focus:outline-none font-mono">
+            </div>
+
+            <button onclick="addDevice()" class="w-full mt-6 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-semibold transition-all">
+                Add Device
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let devices = [
+            { id: 1, name: 'RYAN', device: 'Samsung S20 ULTRA', mac: '26:ca:c9:61:46:d8', ip: '192.168.100.2', status: 'online' },
+            { id: 2, name: 'JAZTINE', device: 'IPHONE 11 PRO', mac: '6e:9e:30:0c:e7:15', ip: '192.168.100.3', status: 'online' },
+            { id: 3, name: 'JAJA', device: 'Samsung S22 Ultra', mac: '1e:c8:c3:5d:b0:10', ip: '192.168.100.4', status: 'online' },
+            { id: 4, name: 'LOLA', device: 'OPPO-A57', mac: '4a:8b:48:1e:43:35', ip: '192.168.100.5', status: 'online' },
+            { id: 5, name: 'TITA', device: 'OPPO-A5s', mac: 'd8:1e:dd:98:20:39', ip: '192.168.100.6', status: 'online' },
+            { id: 6, name: 'PATS', device: 'POCO-X3-NFC', mac: '2e:70:3d:e8:98:f8', ip: '192.168.100.7', status: 'online' },
+            { id: 7, name: 'CHARLES', device: 'Galaxy-Tab-A7-Li', mac: '46:a0:32:66:67:2e', ip: '192.168.100.10', status: 'online' },
+            { id: 8, name: 'ASENG', device: 'HONOR-X9a-5G', mac: '12:5b:8b:29:72:5f', ip: '192.168.100.9', status: 'online' },
+            { id: 9, name: 'RYAN', device: 'Ryan-s-S23-Ultra', mac: 'e6:93:b9:5e:43:1f', ip: '192.168.100.11', status: 'online' }
+        ];
+
+        function renderDevices(devicesToRender = devices) {
+            const deviceList = document.getElementById('deviceList');
+            const noResults = document.getElementById('noResults');
+            
+            if (devicesToRender.length === 0) {
+                deviceList.innerHTML = '';
+                noResults.classList.remove('hidden');
+                return;
+            }
+            
+            noResults.classList.add('hidden');
+            deviceList.innerHTML = devicesToRender.map(device => `
+                <div class="bg-slate-800 border border-slate-700 rounded-lg p-4 hover:border-slate-600 transition-all">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-4 flex-1 min-w-0">
+                            <button onclick="toggleStatus(${device.id})" class="flex-shrink-0">
+                                ${device.status === 'online' ? `
+                                    <svg class="text-green-400" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
+                                        <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
+                                        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+                                        <line x1="12" y1="20" x2="12.01" y2="20"></line>
+                                    </svg>
+                                ` : `
+                                    <svg class="text-gray-500" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                    </svg>
+                                `}
+                            </button>
+                            
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <h3 class="text-white font-semibold text-lg truncate">${device.name}</h3>
+                                    <span class="px-2 py-0.5 rounded text-xs ${device.status === 'online' ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'}">
+                                        ${device.status}
+                                    </span>
+                                </div>
+                                <div class="text-gray-400 text-sm mb-2 truncate">${device.device}</div>
+                                <div class="flex flex-wrap gap-3 text-xs">
+                                    <span class="text-gray-500">MAC: <span class="text-gray-300 font-mono">${device.mac}</span></span>
+                                    <span class="text-gray-500">IP: <span class="text-gray-300 font-mono">${device.ip}</span></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button onclick="deleteDevice(${device.id})" class="flex-shrink-0 ml-2 p-2 hover:bg-red-500/10 rounded-lg transition-colors">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-red-400">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            
+            updateStats();
+        }
+
+        function updateStats() {
+            document.getElementById('totalDevices').textContent = devices.length;
+            document.getElementById('onlineDevices').textContent = devices.filter(d => d.status === 'online').length;
+        }
+
+        function toggleStatus(id) {
+            const device = devices.find(d => d.id === id);
+            if (device) {
+                device.status = device.status === 'online' ? 'offline' : 'online';
+                filterDevices();
+            }
+        }
+
+        function deleteDevice(id) {
+            if (confirm('Remove this device?')) {
+                devices = devices.filter(d => d.id !== id);
+                filterDevices();
+            }
+        }
+
+        function filterDevices() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            if (!query.trim()) {
+                renderDevices(devices);
+                return;
+            }
+            
+            const filtered = devices.filter(device => 
+                device.name.toLowerCase().includes(query) ||
+                device.device.toLowerCase().includes(query) ||
+                device.mac.toLowerCase().includes(query) ||
+                device.ip.toLowerCase().includes(query)
+            );
+            renderDevices(filtered);
+        }
+
+        function openAddModal() {
+            document.getElementById('addModal').classList.remove('hidden');
+        }
+
+        function closeAddModal() {
+            document.getElementById('addModal').classList.add('hidden');
+            document.getElementById('userName').value = '';
+            document.getElementById('deviceModel').value = '';
+            document.getElementById('macAddress').value = '';
+            document.getElementById('ipAddress').value = '';
+        }
+
+        function addDevice() {
+            const name = document.getElementById('userName').value.trim();
+            const device = document.getElementById('deviceModel').value.trim();
+            const mac = document.getElementById('macAddress').value.trim();
+            const ip = document.getElementById('ipAddress').value.trim();
+            
+            if (!name || !device || !mac || !ip) {
+                alert('Please fill all fields');
+                return;
+            }
+            
+            const newId = Math.max(...devices.map(d => d.id), 0) + 1;
+            devices.push({ id: newId, name, device, mac, ip, status: 'online' });
+            closeAddModal();
+            filterDevices();
+        }
+
+        // Initialize
+        renderDevices();
+    </script>
+</body>
+</html>
